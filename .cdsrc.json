@@ -1,0 +1,9 @@
+{
+    "export": {
+      "asyncapi": {
+        "application_namespace": "archforum.demo",
+        "title": "ArchForum Demo",
+        "version": "1.0.0"
+      }
+    }
+  }

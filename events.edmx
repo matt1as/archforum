@@ -1,0 +1,37 @@
+{
+  "namespace": "archforum.cap",
+  "definitions": {
+    "archforum.cap.TranslatedEvent": {
+      "kind": "type",
+      "elements": {
+        "title": {
+          "type": "cds.String"
+        },
+        "description": {
+          "type": "cds.String"
+        }
+      }
+    },
+    "archforum.cap.ReceiverService": {
+      "@source": "srv/receiver-service.cds",
+      "kind": "service",
+      "@path": "/receiver"
+    },
+    "archforum.cap.ReceiverService.translated": {
+      "kind": "function",
+      "params": {
+        "event": {
+          "type": "archforum.cap.TranslatedEvent"
+        }
+      },
+      "returns": {
+        "type": "cds.Boolean"
+      }
+    }
+  },
+  "meta": {
+    "creator": "CDS Compiler v5.1.2",
+    "flavor": "inferred"
+  },
+  "$version": "2.0"
+}
