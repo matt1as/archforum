@@ -1,7 +1,10 @@
+import { Sessions, Session } from "#cds-models/archforum/cap";
+
 const cds = require('@sap/cds');
 const { message } = require('@sap/cds/lib/log/cds-error');
-
 const { Translate } = require('@google-cloud/translate').v2;
+
+
 
 // Function to translate text
 async function translateText(title : string, description : string, targetLanguage = 'en') {
@@ -19,6 +22,8 @@ async function translateText(title : string, description : string, targetLanguag
 
 
 module.exports = cds.service.impl(async function () {
+
+
   // "messagingQueue" is described in the package.json
   const messaging = await cds.connect.to('messaging');
   console.log("connected")
@@ -33,9 +38,21 @@ module.exports = cds.service.impl(async function () {
 
   await messaging.on(`ce/archforum/ZFORUMxSESSION/CREATED/v1`, async (msg: any) => {
     const translatedText = await translateText( msg.data.title , msg.data.description, 'en');
-    const topic = 'cap/000/description/translated'
-    const payload = { Uuid: msg.data.Uuid , 'title' : translatedText[0], 'description' : translatedText[1]  }
-    messaging.emit(topic, payload )
+    // Create entity Session with translated text and save in db
+    const session : Session = {
+       externalId: msg.data.Uuid,
+       title: msg.data.title,
+       descr : msg.data.description,
+       date: msg.data.Date,  
+    }
+
+    // Create entity Session with translated text and save in db, with error logging
+    try {
+      await INSERT (session).into(Sessions);
+    } catch (error) {
+      console.error('Error creating session:', error);
+    }
+
   }
   );
 
