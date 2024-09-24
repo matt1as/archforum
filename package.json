@@ -6,21 +6,24 @@
   "license": "UNLICENSED",
   "private": true,
   "dependencies": {
+    "@cap-js/hana": "^1.2.0",
     "@google-cloud/translate": "^8.5.0",
     "@sap/cds": "^8",
+    "@sap/cds-hana": "^2",
+    "@sap/generator-fiori": "^1.15.0",
     "@sap/xb-msg-amqp-v100": "^0.9.58",
+    "@sap/xssec": "^3",
     "express": "^4"
   },
   "devDependencies": {
     "@cap-js/cds-typer": ">=0.1",
     "@cap-js/cds-types": "^0.6",
     "@cap-js/sqlite": "^1",
+    "@sap/cds-dk": "^7",
     "@tsconfig/node22": "^22.0.0"
   },
   "scripts": {
-    "start": "cds-serve",
-    "asyncapi": "cds-ts compile srv --service all -o docs --to asyncapi",
-    "hybrid": "cds-ts watch --profile hybrid"
+    "start": "cds-serve"
   },
   "cds": {
     "requires": {
@@ -43,7 +46,16 @@
         "[production]": {
           "kind": "enterprise-messaging"
         }
-      }
+      },
+      "[hybrid]": {
+        "db": "hana",
+        "auth": "xsuaa"
+      },
+      "[production]": {
+        "auth": "xsuaa",
+        "db": "hana"
+      },
+      "auth": "xsuaa"
     }
   },
   "imports": {

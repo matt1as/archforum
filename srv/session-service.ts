@@ -1,29 +1,20 @@
 import { Sessions, Session } from "#cds-models/archforum/cap";
 
-const cds = require('@sap/cds');
-const { message } = require('@sap/cds/lib/log/cds-error');
+import cds from '@sap/cds';
 const { Translate } = require('@google-cloud/translate').v2;
-
-
 
 // Function to translate text
 async function translateText(title : string, description : string, targetLanguage = 'en') {
   try {
     const translate = new Translate();
-    console.log("Translating text: ", JSON.stringify({title, description}))
     const [translation] = await translate.translate([title, description], targetLanguage);
-    console.log("Text translated: ", JSON.stringify(translation))
     return translation;
   } catch (error) {
-    console.error('Error translating text:', error);
     return [title, description]; // Return original text if translation fails
   }
 }
 
-
 module.exports = cds.service.impl(async function () {
-
-
   // "messagingQueue" is described in the package.json
   const messaging = await cds.connect.to('messaging');
   console.log("connected")
@@ -32,43 +23,73 @@ module.exports = cds.service.impl(async function () {
   /***********************/
 
   // listens for events in "$namespace/processOnReceiver1" topic stored in the queue specified in the package.json
-  await messaging.on(`ce/archforum/ZFORUMxSESSION/DELETED/v1`, (msg: any) =>
-    console.log('Session deleted: ', msg.data)
-  );
+  await messaging.on(`ce/archforum/ZFORUMxSESSION/DELETED/v1`, async (msg: any) => {
+    console.log('Session deleted: ', msg.data);
+    await DELETE(Sessions).where({ externalId: msg.data.Uuid })
+});
 
   await messaging.on(`ce/archforum/ZFORUMxSESSION/CREATED/v1`, async (msg: any) => {
     const translatedText = await translateText( msg.data.title , msg.data.description, 'en');
-    // Create entity Session with translated text and save in db
-    const session : Session = {
-       externalId: msg.data.Uuid,
-       title: msg.data.title,
-       descr : msg.data.description,
-       date: msg.data.Date,  
-    }
 
-    // Create entity Session with translated text and save in db, with error logging
+    const tx = cds.transaction();
+
     try {
-      await INSERT (session).into(Sessions);
+      // Insert the main session entity
+      const session : Session = {
+        externalId: msg.data.Uuid,
+        title: msg.data.title,
+        descr: msg.data.description,
+        date: msg.data.Date
+      };
+  
+      const result = await tx.run(INSERT.into(Sessions).entries(session));
+      const entries = [...result]
+      // Insert translations
+      const translations = [
+        { locale: 'en', title: translatedText[0], descr: translatedText[1] },
+      ];
+  
+      for (const translation of translations) {
+        // @ts-ignore
+        await tx.run(INSERT.into(Sessions.texts).entries({
+          ID: entries[0].ID,  // Assuming 'ID' is the key of your Sessions entity
+          locale: translation.locale,
+          title: translation.title,
+          descr: translation.descr
+        }));
+      }
+  
+      await tx.commit();
+      console.log('Session created with translations');
+      return result;
+  
     } catch (error) {
-      console.error('Error creating session:', error);
+      await tx.rollback();
+      console.error('Error creating session with translations:', error);
+      throw error;
     }
-
-  }
-  );
+  });  
 
   await messaging.on(`ce/archforum/ZFORUMxSESSION/UPDATED/v1`, async (msg: any ) => {
     const translatedText = await translateText( msg.data.title , msg.data.description, 'en');
 
-    const event = {
-      type: 'archforum.cap',
-      data: {
-        Uuid: msg.data.Uuid,
-        title : translatedText[0],
-        description: translatedText[1]
-      }
+    const session : Session = {
+      externalId: msg.data.Uuid,
+      title: msg.data.title,
+      descr : msg.data.description,
+      date: msg.data.Date,  
+   }
+
+   // find if session exists using externalId
+   const existingSession = await SELECT.one.from(Sessions).where({ externalId: msg.data.Uuid });
+
+   if (existingSession) {
+    // update session
+    await UPDATE(Sessions, existingSession.ID).with(session);
+  } else {
+     // create session
+     await INSERT (session).into(Sessions);
     }
-    const topic = 'cap/000/description/translated'
-    messaging.emit(topic, event)  
   });
   
 });

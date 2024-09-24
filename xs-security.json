@@ -1,0 +1,19 @@
+{
+  "scopes": [
+    {
+      "name": "Development.Sessions.read",
+      "description": "Sessions.read"
+    }
+  ],
+  "attributes": [],
+  "role-templates": [
+    {
+      "name": "Sessions.read",
+      "description": "generated",
+      "scope-references": [
+        "Development.Sessions.read"
+      ],
+      "attribute-references": []
+    }
+  ]
+}
