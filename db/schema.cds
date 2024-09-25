@@ -15,7 +15,6 @@ namespace archforum.cap;
 }
 
 annotate Sessions with @(
-    requires: 'Sessions.read',
     UI.LineItem : [
         {Value: title, Label: 'Title'},
         {Value: descr, Label: 'Description'},

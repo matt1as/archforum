@@ -20,10 +20,12 @@
     "@cap-js/cds-types": "^0.6",
     "@cap-js/sqlite": "^1",
     "@sap/cds-dk": "^7",
-    "@tsconfig/node22": "^22.0.0"
+    "@tsconfig/node22": "^22.0.0",
+    "@sap/ux-specification": "UI5-1.128"
   },
   "scripts": {
-    "start": "cds-serve"
+    "start": "cds-serve",
+    "watch-sessions": "cds watch --open sessions/webapp/index.html?sap-ui-xx-viewCache=false"
   },
   "cds": {
     "requires": {
@@ -31,6 +33,12 @@
         "kind": "sqlite",
         "credentials": {
           "url": "db.sqlite"
+        }, 
+        "[hybrid]": {
+          "kind": "sqlite",
+          "credentials": {
+            "url": "db.sqlite"
+          }
         }
       },
       "messaging": {
@@ -47,18 +55,16 @@
           "kind": "enterprise-messaging"
         }
       },
-      "[hybrid]": {
-        "db": "hana",
-        "auth": "xsuaa"
-      },
       "[production]": {
         "auth": "xsuaa",
         "db": "hana"
-      },
-      "auth": "xsuaa"
+      }
     }
   },
   "imports": {
     "#cds-models/*": "./@cds-models/*/index.js"
-  }
+  },
+  "sapux": [
+    "app/sessions"
+  ]
 }
