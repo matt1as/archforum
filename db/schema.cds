@@ -19,5 +19,31 @@ annotate Sessions with @(
         {Value: title, Label: 'Title'},
         {Value: descr, Label: 'Description'},
         {Value: date, Label: 'Date'}, 
+    ],
+
+    UI.Facets : [
+        {
+            $Type : 'UI.ReferenceFacet',
+            Label : '{@i18n>@GeneralInfoFacetLabel}',
+            Target : '@UI.FieldGroup#GeneralInformation',
+        }
+    ],
+
+UI.FieldGroup #GeneralInformation : {
+    $Type : 'UI.FieldGroupType',
+    Label : 'Dimensions',
+    Data : [
+        {
+            
+            $Type : 'UI.DataField',
+            Value : title
+        },
+        {
+            $Type : 'UI.DataField',
+            Value : descr
+        }
     ]
+}
+
+
 );

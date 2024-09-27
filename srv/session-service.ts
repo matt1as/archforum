@@ -4,7 +4,7 @@ import cds from '@sap/cds';
 const { Translate } = require('@google-cloud/translate').v2;
 
 // Function to translate text
-async function translateText(title : string, description : string, targetLanguage = 'en') {
+async function translateText(title : string, description : string, targetLanguage = '6N') {
   try {
     const translate = new Translate();
     const [translation] = await translate.translate([title, description], targetLanguage);
@@ -47,6 +47,8 @@ module.exports = cds.service.impl(async function () {
       // Insert translations
       const translations = [
         { locale: 'en', title: translatedText[0], descr: translatedText[1] },
+        { locale: '6N', title: translatedText[0], descr: translatedText[1] },
+
       ];
   
       for (const translation of translations) {
@@ -71,7 +73,7 @@ module.exports = cds.service.impl(async function () {
   });  
 
   await messaging.on(`ce/archforum/ZFORUMxSESSION/UPDATED/v1`, async (msg: any ) => {
-    const translatedText = await translateText( msg.data.title , msg.data.description, 'en');
+    const translatedText = await translateText( msg.data.title , msg.data.description, '6N');
 
     const session : Session = {
       externalId: msg.data.Uuid,
