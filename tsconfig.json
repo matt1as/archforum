@@ -13,7 +13,10 @@
       "moduleResolution": "nodenext",
       "paths": {
         "#cds-models/*": ["./@cds-models/*/index.ts"]
-      }
+      },
+
+      "allowImportingTsExtensions": true,
+      "noEmit": true
     },
     "include": ["srv"],
     "exclude": ["node_modules"]

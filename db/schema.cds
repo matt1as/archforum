@@ -1,6 +1,6 @@
 using {  managed, User  } from '@sap/cds/common';
 namespace archforum.cap;
-
+ 
 @readonly entity Sessions : managed { 
   key ID : UUID;
   title  : localized String(111);

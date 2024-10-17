@@ -21,11 +21,15 @@
     "@cap-js/sqlite": "^1",
     "@sap/cds-dk": "^7",
     "@sap/ux-specification": "UI5-1.128",
-    "@tsconfig/node22": "^22.0.0"
+    "@tsconfig/node22": "^22.0.0",
+    "@types/jest": "^29.5.13",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.5"
   },
   "scripts": {
     "start": "cds-serve",
-    "watch-sessions": "cds watch --open sessions/webapp/index.html?sap-ui-xx-viewCache=false"
+    "watch-sessions": "cds watch --open sessions/webapp/index.html?sap-ui-xx-viewCache=false",
+    "test": "jest"
   },
   "cds": {
     "requires": {

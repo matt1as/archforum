@@ -4,7 +4,7 @@ import cds from '@sap/cds';
 const { Translate } = require('@google-cloud/translate').v2;
 
 // Function to translate text
-async function translateText(title : string, description : string, targetLanguage = '6N') {
+async function translateText(title: string, description: string, targetLanguage = '6N') {
   try {
     const translate = new Translate();
     const [translation] = await translate.translate([title, description], targetLanguage);
@@ -26,22 +26,22 @@ module.exports = cds.service.impl(async function () {
   await messaging.on(`ce/archforum/ZFORUMxSESSION/DELETED/v1`, async (msg: any) => {
     console.log('Session deleted: ', msg.data);
     await DELETE(Sessions).where({ externalId: msg.data.Uuid })
-});
+  });
 
   await messaging.on(`ce/archforum/ZFORUMxSESSION/CREATED/v1`, async (msg: any) => {
-    const translatedText = await translateText( msg.data.title , msg.data.description, 'en');
+    const translatedText = await translateText(msg.data.title, msg.data.description, 'en');
 
     const tx = cds.transaction();
 
     try {
       // Insert the main session entity
-      const session : Session = {
+      const session: Session = {
         externalId: msg.data.Uuid,
         title: msg.data.title,
         descr: msg.data.description,
         date: msg.data.Date
       };
-  
+
       const result = await tx.run(INSERT.into(Sessions).entries(session));
       const entries = [...result]
       // Insert translations
@@ -50,7 +50,7 @@ module.exports = cds.service.impl(async function () {
         { locale: '6N', title: translatedText[0], descr: translatedText[1] },
 
       ];
-  
+
       for (const translation of translations) {
         // @ts-ignore
         await tx.run(INSERT.into(Sessions.texts).entries({
@@ -60,39 +60,62 @@ module.exports = cds.service.impl(async function () {
           descr: translation.descr
         }));
       }
-  
+
       await tx.commit();
       console.log('Session created with translations');
       return result;
-  
+
     } catch (error) {
       await tx.rollback();
       console.error('Error creating session with translations:', error);
       throw error;
     }
-  });  
+  });
 
-  await messaging.on(`ce/archforum/ZFORUMxSESSION/UPDATED/v1`, async (msg: any ) => {
-    const translatedText = await translateText( msg.data.title , msg.data.description, '6N');
+  await messaging.on(`ce/archforum/ZFORUMxSESSION/UPDATED/v1`, async (msg: any) => {
+    const translatedText = await translateText(msg.data.title, msg.data.description, BRITISH_ENGLISH_LANG_CODE);
 
-    const session : Session = {
+    const session: Session = {
       externalId: msg.data.Uuid,
       title: msg.data.title,
-      descr : msg.data.description,
-      date: msg.data.Date,  
-   }
-
-   // find if session exists using externalId
-   const existingSession = await SELECT.one.from(Sessions).where({ externalId: msg.data.Uuid });
-
-   if (existingSession) {
-    // update session
-    await UPDATE(Sessions, existingSession.ID).with(session);
-  } else {
-     // create session
-     await INSERT (session).into(Sessions);
+      descr: msg.data.description,
+      date: msg.data.Date,
     }
-  });
-  
+
+    const translations = [
+      { locale: ENGLISH_LANG_CODE, title: translatedText[0], descr: translatedText[1] },
+      { locale: BRITISH_ENGLISH_LANG_CODE, title: translatedText[0], descr: translatedText[1] },
+    ];
+
+    // find if session exists using externalId
+    const existingSession = await SELECT.one.from(Sessions).where({ externalId: msg.data.Uuid });
+
+    const tx = cds.transaction();
+    try {
+      if (existingSession) {
+        // update session
+        await UPDATE(Sessions, existingSession.ID).with(session);
+      } else {
+        // create session
+        await INSERT(session).into(Sessions);
+      }
+      for (const translation of translations) {
+        // @ts-ignore
+        await tx.run(UPSERT.into(Sessions.texts).entries({
+          ID: msg.data.Uuid.ID,  // Assuming 'ID' is the key of your Sessions entity
+          locale: translation.locale,
+          title: translation.title,
+          descr: translation.descr
+        }));
+      }
+      await tx.commit();
+    } catch (error) {
+      await tx.rollback();
+      console.error('Error creating session with translations:', error);
+      throw error;
+    }
+  })
 });
 
+const ENGLISH_LANG_CODE = 'en';
+const BRITISH_ENGLISH_LANG_CODE = '6N';
