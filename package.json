@@ -37,12 +37,6 @@
         "kind": "sqlite",
         "credentials": {
           "url": "db.sqlite"
-        },
-        "[hybrid]": {
-          "kind": "sqlite",
-          "credentials": {
-            "url": "db.sqlite"
-          }
         }
       },
       "messaging": {
@@ -51,17 +45,31 @@
         "subscribePrefix": "$namespace/",
         "[development]": {
           "kind": "file-based-messaging"
-        },
-        "[hybrid]": {
+        }
+      },
+      "[hybrid]": {
+        "messaging": {
           "kind": "enterprise-messaging-shared"
         },
-        "[production]": {
-          "kind": "enterprise-messaging"
+        "auth": {
+          "kind": "mocked",
+          "users": {
+              "viewer@test.com": {
+                  "password": "initial",
+                  "ID": "viewer@test.com",
+                  "roles": [
+                    "session-attendee"
+                  ]
+              }
+          }
         }
       },
       "[production]": {
         "auth": "xsuaa",
-        "db": "hana"
+        "db": "hana",
+        "messaging": {
+          "kind": "enterprise-messaging"
+        }
       }
     }
   },

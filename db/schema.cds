@@ -1,6 +1,8 @@
 using {  managed, User  } from '@sap/cds/common';
 namespace archforum.cap;
  
+
+
 @readonly entity Sessions : managed { 
   key ID : UUID;
   title  : localized String(111);
@@ -15,6 +17,7 @@ namespace archforum.cap;
 }
 
 annotate Sessions with @(
+    requires: 'session-attendee',
     UI.LineItem : [
         {Value: title, Label: 'Title'},
         {Value: descr, Label: 'Description'},
